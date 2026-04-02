@@ -15,6 +15,15 @@ function GerenciarDespesa(){
         setData(currentDate);
     };
 
+    const handleChangeValor = (text) => {
+    const cleanText= text.replace(',','.');
+    const match = cleanText.match(/^\d*\.?\d{0,2}$/);
+
+    if(match){
+        setValor(cleanText);
+    }
+};
+
     return(
         <View style={styles.container}>
             <View style={styles.inputContainer}>
@@ -36,22 +45,13 @@ function GerenciarDespesa(){
                     <Text>{data.toLocaleDateString('pt-BR')}</Text>
                 </Pressable>
                 {showPicker && (
-                    <DataTimePicker value={data} mode="date"
+                    <DateTimePicker value={data} mode="date"
                     display="default" onChange={onChange}/>
                 )}
             </View>
         </View>
     )
 }
-
-const handleChangeValor = (text) => {
-    const cleanText= text.replace(',','.');
-    const match = cleanText.match(/^\d*\.?\d{0,2}$/);
-
-    if(match){
-        setValor(cleanText);
-    }
-};
 
 const styles = StyleSheet.create({
     container:{
