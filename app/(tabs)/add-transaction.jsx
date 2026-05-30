@@ -1,83 +1,93 @@
+import { useContext, useState } from "react";
+
 import {
   View,
-  ScrollView,
-  Alert,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Keyboard,
-  TouchableWithoutFeedback,
+  Text,
+  TextInput,
+  Button,
 } from "react-native";
-import { globalStyles } from "../../styles/globalStyles";
-import Button from "../../components/Button";
-import { useContext, useRef, useState } from "react";
-import DescriptionInput from "../../components/DescriptionInput";
-import CurrencyInput from "../../components/CurrencyInput";
-import DatePicker from "../../components/DatePicker";
-import CategoryPicker from "../../components/CategoryPicker";
-import { MoneyContext } from "../../contexts/GlobalState";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { categories } from "../../constants/categories";
 
-const initialForm = {
-  description: "",
-  value: 0,
-  date: new Date(),
-  category: categories.income.name,
-};
+import { Picker } from "@react-native-picker/picker";
+
+import { MoneyContext } from "../../contexts/GlobalState";
 
 export default function AddTransactions() {
-  const [form, setForm] = useState(initialForm);
-  const [transactions, setTransactions] = useContext(MoneyContext);
-  const valueInputRef = useRef();
+  const { categories, addTransaction } =
+    useContext(MoneyContext);
 
-  const setAsyncStorage = async (data) => {
-    try {
-      await AsyncStorage.setItem("transactions", JSON.stringify(data));
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  const [description, setDescription] = useState("");
+  const [value, setValue] = useState("");
 
-  const addTransaction = async () => {
-    const newTransaction = { id: transactions.length + 1, ...form };
-    const updatedTransactions = [...transactions, newTransaction];
+  const [categoryId, setCategoryId] =
+    useState("");
 
-    setTransactions(updatedTransactions);
-    setForm(initialForm);
-    await setAsyncStorage(updatedTransactions);
+  async function handleAdd() {
+    if (!categoryId) return;
 
-    Alert.alert("Transação adicionada com sucesso!");
-  };
+    await addTransaction({
+      description,
+      value: Number(value),
+      date: new Date(),
+      categoryId,
+    });
+
+    setDescription("");
+    setValue("");
+  }
 
   return (
-    <KeyboardAvoidingView style={globalStyles.screenContainer}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView style={globalStyles.content}>
-          <View style={styles.form}>
-            <DescriptionInput
-              form={form}
-              setForm={setForm}
-              valueInputRef={valueInputRef}
-            />
-            <CurrencyInput
-              form={form}
-              setForm={setForm}
-              valueInputRef={valueInputRef}
-            />
-            <DatePicker form={form} setForm={setForm} />
-            <CategoryPicker form={form} setForm={setForm} />
-          </View>
-          <Button onPress={addTransaction}>Adicionar</Button>
-        </ScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+    <View style={{ padding: 20, gap: 12 }}>
+      <Text>Descrição</Text>
+
+      <TextInput
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Digite a descrição"
+        style={{
+          borderWidth: 1,
+          padding: 10,
+        }}
+      />
+
+      <Text>Valor</Text>
+
+      <TextInput
+        value={value}
+        onChangeText={setValue}
+        placeholder="Digite o valor"
+        keyboardType="numeric"
+        style={{
+          borderWidth: 1,
+          padding: 10,
+        }}
+      />
+
+      <Text>Categoria</Text>
+
+      <Picker
+        selectedValue={categoryId}
+        onValueChange={(itemValue) =>
+          setCategoryId(itemValue)
+        }
+      >
+        <Picker.Item
+          label="Selecione uma categoria"
+          value=""
+        />
+
+        {categories.map((item) => (
+          <Picker.Item
+            key={item.id}
+            label={item.displayName}
+            value={item.id}
+          />
+        ))}
+      </Picker>
+
+      <Button
+        title="Salvar"
+        onPress={handleAdd}
+      />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  form: {
-    gap: 12,
-    marginBottom: 40,
-    marginTop: 10,
-  },
-});

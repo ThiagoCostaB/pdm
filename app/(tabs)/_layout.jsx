@@ -31,7 +31,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="add-transactions"
+        name="add-transaction"
         options={{
           title: "Adicionar Transação",
           tabBarLabel: "",
@@ -42,6 +42,12 @@ export default function TabsLayout() {
           )
         }}
       />
+      <Tabs.Screen
+  name="categories"
+  options={{
+    title: "Categorias",
+  }}
+/>
       <Tabs.Screen
         name="summary"
         options={{

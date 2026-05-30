@@ -1,90 +1,89 @@
 import { useContext, useMemo } from "react";
-import { MoneyContext } from "../../contexts/GlobalState";
-import { categories } from "../../constants/categories";
-import { globalStyles } from "../../styles/globalStyles";
-import SummaryItem from "../../components/SummaryItem";
-import { StyleSheet, Text, View } from "react-native";
-import { colors } from "../../constants/colors";
+import { StyleSheet, Text, View, Dimensions } from "react-native";
+import { PieChart } from "react-native-chart-kit";
 
-/** Chaves de categoria válidas para acumular totais (exclui chaves auxiliares como `sum`). */
-const SUMMARY_CATEGORY_KEYS = [
-  categories.income.name,
-  categories.food.name,
-  categories.house.name,
-  categories.education.name,
-  categories.travel.name,
-];
+import { MoneyContext } from "../../contexts/GlobalState";
+import SummaryItem from "../../components/SummaryItem";
+import { colors } from "../../constants/colors";
+import { globalStyles } from "../../styles/globalStyles";
 
 export default function Summary() {
-  const [transactions] = useContext(MoneyContext);
+  const { transactions, categories } = useContext(MoneyContext);
 
-  /**
-   * Calcula totais por categoria e saldo geral em uma única passada O(n) sobre `transactions`.
-   * Ignora itens cuja `category` não está em `SUMMARY_CATEGORY_KEYS` (dados legados/inválidos).
-   *
-   * @returns {{ sum: number, income: number, food: number, house: number, education: number, travel: number }}
-   */
-  const getTotals = () => {
-    const totals = {
-      sum: 0,
-      income: 0,
-      food: 0,
-      education: 0,
-      house: 0,
-      travel: 0,
-    };
+  const totals = useMemo(() => {
+    const categoryTotals = {};
+    let sum = 0;
 
-    for (let i = 0; i < transactions.length; i++) {
-      const item = transactions[i];
-      if (!SUMMARY_CATEGORY_KEYS.includes(item.category)) {
-        continue;
-      }
+    categories.forEach((category) => {
+      categoryTotals[category.id] = 0;
+    });
 
-      totals[item.category] += item.value;
+    transactions.forEach((transaction) => {
+      const value = Number(transaction.value);
 
-      if (item.category === categories.income.name) {
-        totals.sum += item.value;
+      categoryTotals[transaction.categoryId] =
+        (categoryTotals[transaction.categoryId] || 0) + value;
+
+      if (transaction.category?.isIncome) {
+        sum += value;
       } else {
-        totals.sum -= item.value;
+        sum -= value;
       }
-    }
-    return totals;
-  };
+    });
 
-  /* useMemo: recalcula só quando [transactions] mudar. */
-  const totals = useMemo(getTotals, [transactions]);
+    return {
+      totals: categoryTotals,
+      sum,
+    };
+  }, [transactions, categories]);
+
+  const chartData = categories
+    .map((category) => ({
+      name: category.displayName,
+      value: totals.totals[category.id] || 0,
+      color: category.background,
+      legendFontColor: "#333",
+      legendFontSize: 12,
+    }))
+    .filter((item) => item.value > 0);
 
   const valueStyle =
-    totals.sum > 0 ? globalStyles.positiveText : globalStyles.negativeText;
+    totals.sum >= 0
+      ? globalStyles.positiveText
+      : globalStyles.negativeText;
 
   return (
     <View style={globalStyles.screenContainer}>
       <View style={globalStyles.content}>
-        <SummaryItem
-          category={categories.income.name}
-          value={totals[categories.income.name]}
-        />
-        <SummaryItem
-          category={categories.food.name}
-          value={totals[categories.food.name]}
-        />
-        <SummaryItem
-          category={categories.house.name}
-          value={totals[categories.house.name]}
-        />
-        <SummaryItem
-          category={categories.education.name}
-          value={totals[categories.education.name]}
-        />
-        <SummaryItem
-          category={categories.travel.name}
-          value={totals[categories.travel.name]}
-        />
+        {categories.map((category) => (
+          <SummaryItem
+            key={category.id}
+            category={category}
+            value={totals.totals[category.id] || 0}
+          />
+        ))}
+
+        {chartData.length > 0 && (
+          <PieChart
+            data={chartData}
+            width={Dimensions.get("window").width - 40}
+            height={220}
+            chartConfig={{
+              color: (opacity = 1) =>
+                `rgba(0, 0, 0, ${opacity})`,
+            }}
+            accessor="value"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          />
+        )}
 
         <View style={globalStyles.line} />
 
         <View style={styles.balance}>
           <Text style={styles.balanceText}>Saldo</Text>
+
           <Text style={valueStyle}>
             {totals.sum.toLocaleString("pt-BR", {
               style: "currency",
@@ -99,13 +98,12 @@ export default function Summary() {
 
 const styles = StyleSheet.create({
   balance: {
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
   },
   balanceText: {
     fontSize: 18,
     color: colors.primaryText,
-    fontWeight: 800,
+    fontWeight: "800",
   },
 });
