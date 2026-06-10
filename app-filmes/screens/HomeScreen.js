@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, TextInput, Image, StyleSheet } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
 export default function HomeScreen({ navigation, movies }) {
   const [search, setSearch] = useState('');
@@ -8,7 +9,7 @@ export default function HomeScreen({ navigation, movies }) {
   const filteredMovies = movies.filter((movie) => {
     const byName = movie.titulo.toLowerCase().includes(search.toLowerCase());
     const byGenre = genreFilter
-      ? movie.genero.toLowerCase().includes(genreFilter.toLowerCase())
+      ? movie.genero === genreFilter
       : true;
     return byName && byGenre;
   });
@@ -22,13 +23,25 @@ export default function HomeScreen({ navigation, movies }) {
         value={search}
         onChangeText={setSearch}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Filtrar por gênero"
-        placeholderTextColor="#ccc"
-        value={genreFilter}
-        onChangeText={setGenreFilter}
-      />
+      <View style={styles.pickerContainer}>
+      <Picker
+  selectedValue={genreFilter}
+  onValueChange={(value) => setGenreFilter(value)}
+  style={styles.picker}
+  color='#ccc'
+>
+  <Picker.Item label="Todos os gêneros" value=""/>
+  <Picker.Item label="Ação" value="Ação" />
+  <Picker.Item label="Aventura" value="Aventura" />
+  <Picker.Item label="Comédia" value="Comédia" />
+  <Picker.Item label="Drama" value="Drama" />
+  <Picker.Item label="Ficção Científica" value="Ficção Científica" />
+  <Picker.Item label="Terror" value="Terror" />
+  <Picker.Item label="Romance" value="Romance" />
+  <Picker.Item label="Animação" value="Animação" />
+  <Picker.Item label="Suspense" value="Suspense" />
+</Picker>
+</View>
 
       <TouchableOpacity
         style={styles.addButton}
@@ -86,4 +99,19 @@ const styles = StyleSheet.create({
   poster: { width: 60, height: 80, marginRight: 10, borderRadius: 8 },
   title: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   info: { color: '#ddd' },
+  pickerContainer: {
+  backgroundColor: '#4b4b8f',
+  borderRadius: 10,
+  marginBottom: 10,
+  overflow: 'hidden',
+  height: 45,
+  justifyContent: 'center',
+  paddingHorizontal: 5,
+},
+
+picker: {
+  color: '#fff',
+  height: 50,
+  backgroundColor:'#4b4b8f'
+},
 });
