@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import api from '../services/api';
+import { Alert } from 'react-native';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import StarRating from '../components/StarRating';
 
-export default function AddEditMovieScreen({ route, navigation, addMovie, updateMovie, movies }) {
+export default function AddEditMovieScreen({ route, navigation, addMovie, updateMovie, movies, carregarFilmes }) {
   const movieId = route.params?.movieId;
   const movie = movies.find((m) => m.id === movieId);
 
@@ -13,17 +15,38 @@ export default function AddEditMovieScreen({ route, navigation, addMovie, update
   const [descricao, setDescricao] = useState(movie?.descricao || '');
   const [avaliacao, setAvaliacao] = useState(movie?.avaliacao || 0);
 
-  const salvar = () => {
-    const payload = {
-      id: movieId || Date.now().toString(),
-      titulo, ano, genero, imagem, descricao, avaliacao,
-    };
+  const salvar = async () => {
+  if (!titulo || !ano || !genero) {
+    Alert.alert('Erro', 'Preencha os campos obrigatórios');
+    return;
+  }
 
-    if (movieId) updateMovie(payload);
-    else addMovie(payload);
-
-    navigation.goBack();
+  const payload = {
+    titulo,
+    ano,
+    genero,
+    imagem: imagem || 'http://picsum.photos/200/300',
+    descricao,
+    avaliacao,
   };
+
+  try {
+    if (movieId) {
+      await api.put(`/filmes/${movieId}`, payload);
+    } else {
+      await api.post('/filmes', payload);
+    }
+
+    await carregarFilmes();
+
+   // addMovie && addMovie(payload);
+
+    Alert.alert('Sucesso', 'Filme salvo com sucesso!');
+    navigation.goBack();
+  } catch (error) {
+    Alert.alert('Erro', 'Falha ao salvar filme');
+  }
+};
 
   return (
     <View style={styles.container}>

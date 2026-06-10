@@ -7,7 +7,7 @@ import DetailsScreen from '../screens/DetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
-export default function Routes({ movies, addMovie, updateMovie, removeMovie }) {
+export default function Routes({ movies, addMovie, updateMovie, removeMovie, carregarFilmes }) {
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -26,6 +26,7 @@ export default function Routes({ movies, addMovie, updateMovie, removeMovie }) {
               addMovie={addMovie}
               updateMovie={updateMovie}
               movies={movies}
+              carregarFilmes={carregarFilmes}
             />
           )}
         </Stack.Screen>
@@ -35,6 +36,7 @@ export default function Routes({ movies, addMovie, updateMovie, removeMovie }) {
               {...props}
               movies={movies}
               removeMovie={removeMovie}
+              carregarFilmes={carregarFilmes}
             />
           )}
         </Stack.Screen>

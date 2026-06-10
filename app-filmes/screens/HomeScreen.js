@@ -39,13 +39,22 @@ export default function HomeScreen({ navigation, movies }) {
 
       <FlatList
         data={filteredMovies}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) =>
+  item?.id ? item.id.toString() : index.toString()
+}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
             onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
           >
-            <Image source={{ uri: item.imagem }} style={styles.poster} />
+            <Image
+  source={{
+    uri:
+      item.imagem ||
+      'https://picsum.photos/200/300',
+  }}
+  style={styles.poster}
+/>
             <View>
               <Text style={styles.title}>{item.titulo}</Text>
               <Text style={styles.info}>{item.ano}</Text>
